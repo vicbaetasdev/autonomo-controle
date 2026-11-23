@@ -38,13 +38,31 @@ js/
   seed.js           gera a base de dados da demo (determinística)
   store.js          regras de negócio e consultas em memória
   api.js            camada de serviço que as telas consomem
+  oracle.js         leitura e gravação no Oracle Autonomous Database (ORDS)
+  config.js         endereço da API do Oracle
   app.js            telas, navegação, sheets e toasts
-api/                endpoints serverless (Vercel), mesmos contratos do store
+oracle/             scripts do banco e passo a passo (LEIA-ME.md)
+api/                endpoints serverless de demonstração (fases anteriores)
 ```
 
-### Back-end mockado
+### Dados no Oracle Autonomous Database
 
-O back ainda não usa banco de propósito: nesta fase o objetivo é validar produto, não infraestrutura. A pasta `api/` expõe os endpoints REST que o front vai consumir na versão final:
+Com `ORDS_BASE` preenchido em `js/config.js`, o app carrega as tabelas do Oracle ao abrir e grava cada alteração lá, pela API REST do ORDS. A regra "concluir o atendimento lança a entrada no financeiro" mora no banco (trigger), então vale para qualquer tela ou integração. Os dados de demonstração são recriados todo dia, sempre relativos à data de hoje.
+
+| Rota no Oracle | O que faz |
+| --- | --- |
+| `/ords/autonomiza/{servicos,clientes,atendimentos,lancamentos,metas,tarefas}/` | REST automático das tabelas (GET, POST, PUT) |
+| `/ords/autonomiza/app/saude` | rota de saúde para monitoramento |
+| `/ords/autonomiza/app/resumo` | indicadores do mês calculados no banco |
+| `/ords/autonomiza/app/demo/reiniciar` | recria os dados de demonstração (POST) |
+
+Se o Oracle não responder, o app avisa e segue com os dados de demonstração do navegador. Sem `ORDS_BASE`, roda inteiro no navegador. Para apontar para outro banco sem mexer no código: `?ords=https://.../ords/autonomiza/`.
+
+Os scripts e o passo a passo para criar o banco estão em [`oracle/`](oracle/LEIA-ME.md).
+
+### Endpoints de demonstração (fases anteriores)
+
+A pasta `api/` expõe os contratos REST usados na validação do produto, sem banco:
 
 | Endpoint | Métodos | O que faz |
 | --- | --- | --- |
@@ -56,19 +74,18 @@ O back ainda não usa banco de propósito: nesta fase o objetivo é validar prod
 | `/api/tasks` | POST, PATCH | tarefas do dia |
 | `/api/services` | GET | catálogo de serviços |
 
-Como serverless sem banco não guarda estado entre requests, a demo resolve as interações no store local do navegador (`js/api.js`, flag `USE_API`). O `store.js` é a única fonte de regras: os endpoints importam dele, então front e API nunca divergem.
-
-Na versão final, a mesma camada `api.js` passa a apontar pros endpoints do Oracle ORDS/APEX, com os dados no Autonomous Database. Nada nas telas precisa mudar.
+O `store.js` é a única fonte das regras de cálculo: os endpoints importam dele, e com o Oracle ligado as telas continuam calculando por ele sobre os dados do banco.
 
 ## Deploy
 
-Projeto pronto pra Vercel: importa o repositório e faz o deploy sem configuração (front estático + functions em `api/`).
+Projeto pronto pra Vercel: importa o repositório e faz o deploy sem configuração (front estático + functions em `api/`). Com o Oracle ligado, um `vercel.json` repassa `/ords/autonomiza/*` para o endereço do banco, então o navegador fala sempre com o mesmo domínio do app.
 
 ## Roadmap
 
 - [x] Protótipo de alta fidelidade (Figma)
 - [x] MVP navegável com back mockado
-- [ ] Back-end real: Oracle APEX + ORDS + Autonomous Database (camada Always Free)
+- [x] Dados no Oracle Autonomous Database com API REST pelo ORDS (camada Always Free)
+- [ ] Painel administrativo no Oracle APEX
 - [ ] Lembretes de confirmação automáticos
 - [ ] Versão premium: IA Consultora (OCI AI Services) e WhatsApp integrado
 

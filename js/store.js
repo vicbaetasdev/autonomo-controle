@@ -60,13 +60,13 @@ export function agendaDo(dateISO) {
 export function createAppointment(p) {
   let clientId = p.clientId;
   if (!clientId && p.newClient) {
-    clientId = db.clients.length + 1;
+    clientId = Math.max(0, ...db.clients.map(c => c.id)) + 1;
     db.clients.push({ id: clientId, name: p.newClient, color: AV_COLORS[clientId % AV_COLORS.length], phone: '', note: '' });
   }
   const s = db.services.find(x => x.id === p.serviceId);
   const a = {
     id: ++db.nextAptId, date: p.date, time: p.time, clientId, serviceId: p.serviceId,
-    dur: s.dur, price: p.price ?? s.price, status: p.status, pay: p.pay, note: p.note || '',
+    dur: p.dur || s.dur, price: p.price ?? s.price, status: p.status, pay: p.pay, note: p.note || '',
   };
   db.appointments.push(a);
   if (p.status === 'concluido') addTx(a.date, 'in', cliName(clientId), svcName(p.serviceId), a.price, a.pay, a.id);

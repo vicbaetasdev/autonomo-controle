@@ -1,41 +1,47 @@
 // camada de servico que as telas consomem
-// por padrao resolve tudo no store local (a demo precisa manter estado
-// entre as interacoes, e serverless sem banco nao guarda nada entre requests)
-// USE_API=true passa as leituras pros endpoints de /api, que espelham
-// exatamente os mesmos contratos
+// com o Oracle configurado (js/config.js), os dados vem do Autonomous Database e cada
+// alteracao e gravada la; sem ele, tudo roda no store local com os dados de demonstracao
+// as leituras sempre saem do store.js, que e a unica fonte das regras de calculo
 
 import * as store from './store.js';
+import * as oracle from './oracle.js';
 
-const USE_API = false;
+// as telas esperam o carregamento inicial antes da primeira leitura
+export const ready = oracle.iniciar();
 
+// latencia simulada so no modo local, pra UI se comportar como com rede de verdade
 const sleep = () => new Promise(r => setTimeout(r, 150 + Math.random() * 250));
 
-async function call(method, path, local) {
-  await sleep(); // latencia simulada pra UI se comportar como com rede de verdade
-  console.log(`%c[api]%c ${method} ${path}`, 'color:#22D3EE;font-weight:bold', 'color:inherit');
-  if (USE_API && method === 'GET') {
+async function ler(local) {
+  await ready;
+  if (!oracle.ativo()) await sleep();
+  return local();
+}
+
+async function gravar(local, remoto) {
+  await ready;
+  if (oracle.ativo()) {
     try {
-      const r = await fetch(path);
-      if (r.ok) return await r.json();
-    } catch {
-      // sem rede ou rodando local sem as functions, cai pro store
+      return await remoto();
+    } catch (e) {
+      oracle.perdeuConexao(e);
     }
   }
   return local();
 }
 
 export const api = {
-  getServices: () => call('GET', '/api/services', () => store.listServices()),
-  getClients: () => call('GET', '/api/clients', () => store.listClients()),
-  getClientHistory: id => call('GET', `/api/clients?id=${id}`, () => store.clientHistory(id)),
-  getAgenda: date => call('GET', `/api/appointments?date=${date}`, () => store.agendaDo(date)),
-  createAppointment: p => call('POST', '/api/appointments', () => store.createAppointment(p)),
-  setAppointmentStatus: (id, status) => call('PATCH', `/api/appointments?id=${id}`, () => store.setAppointmentStatus(id, status)),
-  getFinance: ym => call('GET', `/api/finance?month=${ym}`, () => store.finance(ym)),
-  createExpense: p => call('POST', '/api/finance', () => store.createExpense(p)),
-  getDashboard: () => call('GET', '/api/dashboard', () => store.dashboard()),
-  getGoals: () => call('GET', '/api/goals', () => store.goalsState()),
-  setGoals: g => call('PUT', '/api/goals', () => store.setGoals(g)),
-  toggleTask: id => call('PATCH', `/api/tasks?id=${id}`, () => store.toggleTask(id)),
-  addTask: label => call('POST', '/api/tasks', () => store.addTask(label)),
+  getServices: () => ler(() => store.listServices()),
+  getClients: () => ler(() => store.listClients()),
+  getClientHistory: id => ler(() => store.clientHistory(id)),
+  getAgenda: date => ler(() => store.agendaDo(date)),
+  getFinance: ym => ler(() => store.finance(ym)),
+  getDashboard: () => ler(() => store.dashboard()),
+  getGoals: () => ler(() => store.goalsState()),
+  createAppointment: p => gravar(() => store.createAppointment(p), () => oracle.criarAtendimento(p)),
+  setAppointmentStatus: (id, status) => gravar(() => store.setAppointmentStatus(id, status), () => oracle.mudarStatus(id, status)),
+  createExpense: p => gravar(() => store.createExpense(p), () => oracle.criarSaida(p)),
+  setGoals: g => gravar(() => store.setGoals(g), () => oracle.salvarMetas(g)),
+  toggleTask: id => gravar(() => store.toggleTask(id), () => oracle.alternarTarefa(id)),
+  addTask: label => gravar(() => store.addTask(label), () => oracle.novaTarefa(label)),
 };

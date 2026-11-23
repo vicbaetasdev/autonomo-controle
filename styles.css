@@ -423,3 +423,21 @@ input:focus,select:focus,textarea:focus{border-color:rgba(34,211,238,.5);box-sha
   section[data-screen],#toast{animation:none}
   .apt-card,.day,.cli,#fab,.card,.tile,#sidenav button{transition:none}
 }
+
+/* ---------- onde os dados estao salvos (Oracle ou demonstracao local) ---------- */
+.db-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;
+  font-size:11px;font-weight:700;white-space:nowrap;background:var(--elevated);color:var(--muted);
+  border:1px solid var(--stroke)}
+.db-pill i{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
+.db-pill.on{background:rgba(199,70,52,.14);border-color:rgba(240,75,58,.38);color:#F7B5AC}
+.db-pill.on i{background:#F04B3A;box-shadow:0 0 0 3px rgba(240,75,58,.18)}
+.db-pill.wait i{background:var(--amber)}
+.db-pill.off i{background:var(--faint)}
+.side-db{display:none}
+@media (min-width: 960px){
+  .side-db{display:flex;flex-direction:column;gap:6px;margin-top:auto;padding:12px 10px;
+    border:1px solid var(--stroke);border-radius:14px;background:var(--surface)}
+  .side-db .sd-t{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint)}
+  .side-db .sd-s{font-size:11px;color:var(--muted);line-height:1.4}
+  .side-db + .user-card{margin-top:8px}
+}

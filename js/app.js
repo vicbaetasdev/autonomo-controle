@@ -1,7 +1,8 @@
 // shell do app: navegacao, telas, sheets e toasts
 // tudo vanilla mesmo, sem framework, pra demo carregar em qualquer lugar
 
-import { api } from './api.js';
+import { api, ready } from './api.js';
+import { status as dbStatus } from './oracle.js';
 import { db, TODAY } from './store.js';
 import { iso, pad, parseISO } from './seed.js';
 
@@ -67,8 +68,32 @@ function go(tab) {
 function head() {
   return `<div class="apphead">
     <div class="brand"><div class="mark">${I.spark}</div><div><div class="n1">Autônomo</div><div class="n2">Controle</div></div></div>
+    ${dbPill(true)}
     <button class="avatar" aria-label="Perfil de Mariana">M</button></div>`;
 }
+
+/* ------- onde os dados estao salvos ------- */
+function dbPill(compact) {
+  const m = dbStatus.modo;
+  const cls = m === 'oracle' ? 'on' : m === 'conectando' ? 'wait' : 'off';
+  const txt = m === 'oracle' ? (compact ? 'Oracle' : 'Oracle Autonomous Database')
+    : m === 'conectando' ? 'Conectando…' : (compact ? 'Local' : 'Demonstração local');
+  const title = m === 'oracle' ? 'Dados salvos no Oracle Autonomous Database'
+    : dbStatus.erro || 'Dados de demonstração gerados neste navegador';
+  return `<span class="db-pill ${cls}" title="${title}"><i></i>${txt}</span>`;
+}
+function paintDb() {
+  const m = dbStatus.modo;
+  const sub = m === 'oracle' ? 'Cada alteração é gravada no banco Oracle na hora.'
+    : m === 'conectando' ? 'Buscando seus dados no banco Oracle.'
+    : dbStatus.erro || 'Dados de demonstração gerados neste navegador.';
+  document.getElementById('db-status').innerHTML = `<span class="sd-t">Seus dados</span>${dbPill(false)}<span class="sd-s">${sub}</span>`;
+  $screens.querySelectorAll('.apphead .db-pill').forEach(el => { el.outerHTML = dbPill(true); });
+}
+window.addEventListener('autonomiza:status', e => {
+  paintDb();
+  if (e.detail.erro) toast(e.detail.erro);
+});
 let toastTimer;
 function toast(msg) {
   $toast.innerHTML = `<span class="tk">${I.check}</span><span>${msg}</span>`;
@@ -376,7 +401,7 @@ function openNovoServico(pre = {}) {
     const p = {
       date: $sheet.querySelector('#ns-date').value, time: $sheet.querySelector('#ns-time').value,
       clientId: isNew ? null : +$cli.value, newClient: isNew ? newName : null,
-      serviceId: +$svc.value, pay: $sheet.querySelector('#ns-pay').value, price: value,
+      serviceId: +$svc.value, dur: +$dur.value, pay: $sheet.querySelector('#ns-pay').value, price: value,
       status: $sheet.querySelector('#ns-st').value, note: $sheet.querySelector('#ns-note').value,
     };
     closeSheet();
@@ -604,4 +629,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$sheet.hi
 
 const anchor = (location.hash || '').replace('#', '');
 if (TABS.some(t => t.id === anchor)) state.tab = anchor;
+paintDb();
 go(state.tab);
+// as telas esperam o carregamento do Oracle (api.js); aqui so atualiza o selo
+ready.then(paintDb);
