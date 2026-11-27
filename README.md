@@ -47,7 +47,7 @@ api/                endpoints serverless de demonstração (fases anteriores)
 
 ### Dados no Oracle Autonomous Database
 
-Com `ORDS_BASE` preenchido em `js/config.js`, o app carrega as tabelas do Oracle ao abrir e grava cada alteração lá, pela API REST do ORDS. A regra "concluir o atendimento lança a entrada no financeiro" mora no banco (trigger), então vale para qualquer tela ou integração. Os dados de demonstração são recriados todo dia, sempre relativos à data de hoje.
+O banco está no ar no Oracle Autonomous Database (região São Paulo), e o endereço do ORDS está em `js/config.js`. Com `ORDS_BASE` preenchido, o app carrega as tabelas do Oracle ao abrir e grava cada alteração lá, pela API REST do ORDS. A regra "concluir o atendimento lança a entrada no financeiro" mora no banco (trigger), então vale para qualquer tela ou integração. Os dados de demonstração são recriados todo dia, sempre relativos à data de hoje.
 
 | Rota no Oracle | O que faz |
 | --- | --- |
@@ -78,7 +78,7 @@ O `store.js` é a única fonte das regras de cálculo: os endpoints importam del
 
 ## Deploy
 
-Projeto pronto pra Vercel: importa o repositório e faz o deploy sem configuração (front estático + functions em `api/`). Com o Oracle ligado, um `vercel.json` repassa `/ords/autonomiza/*` para o endereço do banco, então o navegador fala sempre com o mesmo domínio do app.
+Projeto pronto pra Vercel: importa o repositório e faz o deploy sem configuração (front estático + functions em `api/`). O app chama o ORDS do Oracle direto do navegador: o ORDS libera chamadas de outros domínios (CORS), então não é preciso repasse na Vercel, e o mesmo endereço funciona rodando local.
 
 ## Roadmap
 
