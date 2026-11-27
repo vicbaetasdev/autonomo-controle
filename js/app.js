@@ -357,11 +357,11 @@ function openAptActions(id) {
 
 /* ------- novo servico ------- */
 function openNovoServico(pre = {}) {
-  openSheet(`${sheetHead('Novo Serviço')}
+  openSheet(`${sheetHead('Novo agendamento')}
     <form id="f-ns" class="form">
       <div class="field"><label for="ns-cli">Cliente</label>
-        <select id="ns-cli">${db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-          <option value="new">+ Nova cliente…</option></select></div>
+        <select id="ns-cli"><option value="new">+ Nova cliente…</option>
+          ${db.clients.map((c, i) => `<option value="${c.id}"${i === 0 ? ' selected' : ''}>${c.name}</option>`).join('')}</select></div>
       <div class="field"><label for="ns-date">Data</label><input id="ns-date" type="date" value="${pre.date || state.agendaDate || iso(TODAY)}"></div>
       <div class="field full" id="ns-newcli-wrap" hidden><label for="ns-newcli">Nome da nova cliente</label>
         <input id="ns-newcli" placeholder="Ex.: Larissa Souza"></div>
@@ -378,7 +378,7 @@ function openNovoServico(pre = {}) {
       <div class="field full"><label for="ns-note">Observações</label>
         <textarea id="ns-note" rows="2" placeholder="Ex.: desconto aplicado, cliente fidelidade."></textarea></div>
     </form>
-    <button class="cta" id="ns-go">Adicionar novo serviço</button>
+    <button class="cta" id="ns-go">Agendar</button>
     <div class="cta-note">Entra automaticamente na sua Agenda e no Financeiro.</div>`);
   const $svc = $sheet.querySelector('#ns-svc');
   const $val = $sheet.querySelector('#ns-val');
@@ -425,7 +425,8 @@ async function renderFinanceiro() {
     <div class="catbar"><div class="r"><span class="n">${n}</span><span class="v">${fmt(v)} · ${Math.round(v / catTotal * 100)}%</span></div>
     <div class="track"><i data-w="${(v / catTotal * 100).toFixed(1)}%" style="width:0;background:${CAT_COLORS[n] || '#6366F1'}"></i></div></div>`).join('');
   $screens.innerHTML = `<section data-screen="financeiro">${head()}
-    <div class="blk-head"><div class="h-display">Financeiro</div><div class="h-sub">Entradas, saídas e saldo de ${MESES[TODAY.getMonth()]}</div></div>
+    <div class="blk-head fin-head"><div><div class="h-display">Financeiro</div><div class="h-sub">Entradas, saídas e saldo de ${MESES[TODAY.getMonth()]}</div></div>
+      <button class="act-out" id="add-out-top">+ Lançar despesa</button></div>
     <div class="card hero blk-hero">
       <div class="rowhead"><span class="metric-label">Saldo do mês</span>
         <span class="chip ${f.saldo >= 0 ? 'ok' : 'off'}">${f.saldo >= 0 ? '↑ positivo' : '↓ negativo'}</span></div>
@@ -441,15 +442,16 @@ async function renderFinanceiro() {
     <div class="card blk-cats"><div class="h-title" style="margin-bottom:12px">Saídas por categoria</div>${cats || '<div class="empty">Nenhuma saída lançada neste mês.</div>'}</div>
     <div class="card blk-tx">
       <div class="rowhead"><span class="h-title">Lançamentos recentes</span>
-        <button class="link" id="add-out">+ Nova saída</button></div>
+        <button class="link" id="add-out">+ Lançar despesa</button></div>
       <div>${f.tx.slice(0, 8).map(txRow).join('') || '<div class="empty">Sem lançamentos ainda.</div>'}</div>
     </div></section>`;
   document.getElementById('add-out').onclick = openNovaSaida;
+  document.getElementById('add-out-top').onclick = openNovaSaida;
   countUps();
   animateTracks();
 }
 function openNovaSaida() {
-  openSheet(`${sheetHead('Nova saída')}
+  openSheet(`${sheetHead('Lançar despesa')}
     <form id="f-out" class="form">
       <div class="field full"><label for="out-label">Descrição</label><input id="out-label" placeholder="Ex.: Esmaltes NailArt"></div>
       <div class="field"><label for="out-cat">Categoria</label>
@@ -459,7 +461,7 @@ function openNovaSaida() {
       <div class="field"><label for="out-pay">Pagamento</label>
         <select id="out-pay">${['Pix', 'Dinheiro', 'Crédito', 'Débito'].map(p => `<option>${p}</option>`).join('')}</select></div>
     </form>
-    <button class="cta" id="out-go">Lançar saída</button>`);
+    <button class="cta" id="out-go">Lançar despesa</button>`);
   $sheet.querySelector('#f-out').addEventListener('submit', e => e.preventDefault());
   $sheet.querySelector('#out-go').onclick = async () => {
     const label = ($sheet.querySelector('#out-label').value || '').trim();

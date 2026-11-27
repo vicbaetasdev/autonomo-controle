@@ -444,3 +444,9 @@ input:focus,select:focus,textarea:focus{border-color:rgba(34,211,238,.5);box-sha
 @media (min-width: 960px){
   .side-db .db-pill{white-space:normal;align-self:flex-start;line-height:1.3}
 }
+
+/* financeiro: botao de despesa no topo (ajuste do teste com usuarias, 27/11) */
+.fin-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.act-out{display:inline-flex;align-items:center;padding:10px 14px;border-radius:8px;font:inherit;font-size:14px;font-weight:700;
+  color:#FDA4AF;background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.38);white-space:nowrap;cursor:pointer}
+.act-out:hover{background:rgba(251,113,133,.2)}

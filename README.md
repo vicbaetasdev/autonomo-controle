@@ -12,8 +12,8 @@ O layout é responsivo de verdade: no desktop vira um painel com sidebar de nave
 
 - **Início**: total de vendas do mês, ticket médio, número de vendas, gráfico de receita dos últimos 30 dias e últimas transações
 - **Agenda**: visão por dia com valor previsto, status de cada atendimento (aguardando, confirmado, concluído, cancelado) e horários livres destacados, prontos pra preencher
-- **Novo Serviço**: cadastro em segundos; concluído já lança a entrada no financeiro
-- **Financeiro**: saldo do mês, entradas, saídas por categoria e lançamentos recentes
+- **Novo agendamento**: marca o horário em segundos, com cliente nova direto no formulário; concluído já lança a entrada no financeiro
+- **Financeiro**: saldo do mês, entradas, saídas por categoria, lançamentos recentes e o botão de lançar despesa no topo
 - **Clientes**: busca, filtros (frequentes, novas, sem retorno), badges de fidelidade e histórico por cliente
 - **Metas & Tarefas**: progresso de faturamento e atendimentos calculado dos dados reais da demo, mais checklist do dia
 
